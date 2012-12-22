@@ -1,6 +1,6 @@
 <?php
 
-namespace hergot\DataAdapter;
+namespace hergot\databroker\DataAdapter;
 
 interface DataAdapterLoaderInterface {
     /**

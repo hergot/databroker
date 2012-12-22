@@ -1,7 +1,18 @@
 <?php
 // autoloader for php unit tests
 spl_autoload_register(function($class) {
-    $filename = __DIR__ . '/' . str_replace('\\', '/', str_replace('hergot\\databroker', 'src', $class)) . '.php'; 
+    $path = str_replace(
+            array(
+                'hergot\\databroker\\test',
+                'hergot\\databroker'
+            ), 
+            array(
+                'test', 
+                'src'
+            ), $class);
+    $filename = __DIR__ . '/' 
+            . str_replace('\\', '/', $path) 
+            . '.php';
     if (file_exists($filename)) {
         require_once $filename;
     }
