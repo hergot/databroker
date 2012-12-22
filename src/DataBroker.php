@@ -28,7 +28,12 @@ class DataBroker {
      * @throws DataBrokerException
      */
     public function execute($adapterName, array $parameters=array()) {
-	$dataAdapter = $this->dataAdapterLoader->instantiate($adapterName);
+        try {
+            $dataAdapter = $this->dataAdapterLoader->instantiate($adapterName);
+        } catch (\Exception $e) {
+            throw new DataBrokerException('Cannot initialize data adapter "' 
+                    . $adapterName . '"', DataBrokerException::CANNOT_INITIALIZE_DATA_ADAPTER, $e);
+        }
         
         // Check parameters. Adapter can expect some required parameters 
         // or some with default values when no present

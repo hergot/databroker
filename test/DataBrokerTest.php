@@ -26,6 +26,21 @@ class DataBrokerTest extends \PHPUnit_Framework_TestCase {
         $databroker = new DataBroker($loaderMock);
         $this->assertEquals('test', $databroker->execute('testAdapter', array('parameter' => 1)));
     }
+
+    /**
+     * @expectedException \hergot\databroker\DataBrokerException
+     * @expectedExceptionCode \hergot\databroker\DataBrokerException::CANNOT_INITIALIZE_DATA_ADAPTER
+     */
+    public function testExecuteCannotInitializeDataAdapter() {        
+        $loaderMock = $this->getMock('\hergot\DataAdapter\DataAdapterLoaderInterface', array('instantiate'));
+        $loaderMock->expects($this->once())
+                ->method('instantiate')
+                ->will($this->returnCallback(function() {
+                    throw new \Exception('test');
+                }));
+        $databroker = new DataBroker($loaderMock);
+        $databroker->execute('testAdapter', array());
+    }
     
     /**
      * @expectedException \hergot\databroker\DataBrokerException
