@@ -36,6 +36,8 @@ It implements plugin architecture so it is easy to extend databroker with additi
 
 ####APC
 
-You have to enable apc for cli - apc.enable_cli=1 in php.ini file or run phpunit with --exclude-group=apc
+You have to enable apc for cli - apc.enable_cli=1 in php.ini file or run phpunit with --exclude-group apc
+
+`$ ./phpunit --exclude-group apc -c .`
 
 
