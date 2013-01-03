@@ -32,4 +32,10 @@ It implements plugin architecture so it is easy to extend databroker with additi
 
 `$ ./phpunit --coverage-html <folder path e.g. /tmp/coverage> -c .`
 
+###Notes
+
+####APC
+
+You have to enable apc for cli - apc.enable_cli=1 in php.ini file or run phpunit with --exclude-group=apc
+
 
