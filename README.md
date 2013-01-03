@@ -18,7 +18,7 @@ It implements plugin architecture so it is easy to extend databroker with additi
 
 ### Run composer
 
-`$ ./composer.phat install --dev`
+`$ ./composer.phar install --dev`
 
 ### Create symbolic link for phpunit
 
