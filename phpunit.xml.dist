@@ -10,19 +10,19 @@
     convertWarningsToExceptions = "true"
     processIsolation            = "false"
     stopOnFailure               = "false"
-    syntaxCheck                 = "false"
-    bootstrap 			= "bootstrap.php" >
+    syntaxCheck                 = "false">
 
     <testsuites>
         <testsuite name="DataBroker Test Suite">
-            <directory>test</directory>
+            <directory>src/hergot/databroker/Tests</directory>
         </testsuite>
     </testsuites>
 
     <filter>
-        <whitelist>
-            <directory>src</directory>
-        </whitelist>
+        <blacklist>
+            <directory>src/hergot/databroker/Tests</directory>
+            <directory>vendor</directory>
+        </blacklist>
     </filter>
 
 </phpunit>

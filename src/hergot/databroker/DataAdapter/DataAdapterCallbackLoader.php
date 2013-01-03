@@ -21,15 +21,15 @@ class DataAdapterCallbackLoader implements DataAdapterLoaderInterface {
      * 
      * @param string $name
      * @return DataAdapterInterface
-     * @throws \UnexpectedValueException
+     * @throws \InvalidArgumentException
      */
     public function instantiate($name) {
         $dataAdapterInstance = call_user_func($this->callback, $name);
         if (gettype($dataAdapterInstance) !== 'object') {
-            throw new \UnexpectedValueException('Unexpected data adapter loader result. Expected object get "' . gettype($dataAdapterInstance) . '" for adapter name "' . $name . '"');
+            throw new \InvalidArgumentException('Unexpected data adapter loader result. Expected object get "' . gettype($dataAdapterInstance) . '" for adapter name "' . $name . '"');
         }
         if (!$dataAdapterInstance instanceof DataAdapterInterface) {
-            throw new \UnexpectedValueException('"' . get_class($dataAdapterInstance) . '" not implements "\hergot\DataAdapter\DataAdapterInterface"');
+            throw new \InvalidArgumentException('"' . get_class($dataAdapterInstance) . '" not implements "\hergot\DataAdapter\DataAdapterInterface"');
         }
         return $dataAdapterInstance;
     }

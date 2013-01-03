@@ -22,14 +22,14 @@ class DataAdapterSimpleLoader implements DataAdapterLoaderInterface {
      * @param string $name
      * @return DataAdapterInterface
      * @throws \ReflectionException
-     * @throws \UnexpectedValueException
+     * @throws \InvalidArgumentException
      */
     public function instantiate($name) {
         $dataAdapterClass = $this->adapterNamespace . '\\' . $name;
         $reflectionClass = new \ReflectionClass($dataAdapterClass);
         $dataAdapterInstance = $reflectionClass->newInstance();
         if (!$dataAdapterInstance instanceof DataAdapterInterface) {
-            throw new \UnexpectedValueException('"' . $dataAdapterClass . '" not implements "\hergot\DataAdapter\DataAdapterInterface"');
+            throw new \InvalidArgumentException('"' . $dataAdapterClass . '" not implements "\hergot\DataAdapter\DataAdapterInterface"');
         }
         return $dataAdapterInstance;
     }

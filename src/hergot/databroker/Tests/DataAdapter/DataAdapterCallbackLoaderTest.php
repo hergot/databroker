@@ -1,6 +1,6 @@
 <?php
 
-namespace hergot\databroker\test\DataAdapter;
+namespace hergot\databroker\Tests\DataAdapter;
 
 use hergot\databroker\DataAdapter\DataAdapterCallbackLoader;
 
@@ -16,7 +16,7 @@ class DataAdapterCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
     }
     
     /**
-     * @expectedException \UnexpectedValueException
+     * @expectedException \InvalidArgumentException
      */
     public function testInstantiateNotObject() {
         $loader = new DataAdapterCallbackLoader(function($name) {
@@ -27,7 +27,7 @@ class DataAdapterCallbackLoaderTest extends \PHPUnit_Framework_TestCase {
     }
 
     /**
-     * @expectedException \UnexpectedValueException
+     * @expectedException \InvalidArgumentException
      */
     public function testInstantiateNotDataAdapterInterface() {
         $loader = new DataAdapterCallbackLoader(function($name) {

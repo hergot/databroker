@@ -1,6 +1,6 @@
 <?php
 
-namespace hergot\databroker\test\mock\DataAdapter;
+namespace hergot\databroker\Tests\Mock\DataAdapter;
 
 class TestAdapter implements \hergot\databroker\DataAdapter\DataAdapterInterface {
     public function fetch(array $parameters = array()) {

@@ -1,21 +1,21 @@
 <?php
 
-namespace hergot\databroker\test\DataAdapter;
+namespace hergot\databroker\Tests\DataAdapter;
 
 use hergot\databroker\DataAdapter\DataAdapterSimpleLoader;
 
 class DataAdapterSimpleLoaderTest extends \PHPUnit_Framework_TestCase {
     
     public function testInstantiate() {
-        $loader = new DataAdapterSimpleLoader('\hergot\databroker\test\mock\DataAdapter');
+        $loader = new DataAdapterSimpleLoader('\hergot\databroker\Tests\Mock\DataAdapter');
         $loader->instantiate('TestAdapter');
     }
 
     /**
-     * @expectedException \UnexpectedValueException
+     * @expectedException \InvalidArgumentException
      */
     public function testInstantiateInterfaceException() {
-        $loader = new DataAdapterSimpleLoader('\hergot\databroker\test\mock\DataAdapter');
+        $loader = new DataAdapterSimpleLoader('\hergot\databroker\Tests\Mock\DataAdapter');
         $loader->instantiate('TestAdapterNoDataAdapterInterface');
     }
     
