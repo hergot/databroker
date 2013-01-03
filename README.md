@@ -26,10 +26,10 @@ It implements plugin architecture so it is easy to extend databroker with additi
 
 ##Run unit tests
 
-`./phpunit -c .`
+`$ ./phpunit -c .`
 
 ###Run code coverage with unit tests
 
-`./phpunit --coverage-html <folder path e.g. /tmp/coverage> -c .`
+`$ ./phpunit --coverage-html <folder path e.g. /tmp/coverage> -c .`
 
 
