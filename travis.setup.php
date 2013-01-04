@@ -40,8 +40,7 @@ class PhpExtensions
             'memcached' => array(
                 'url'        => 'http://pecl.php.net/get/memcached-2.1.0.tgz',
                 'php_version' => array(
-                    // memcached 1.0.2 does not build on PHP 5.4
-                    array('<', '5.4'),
+                    array('>=', '5.4'),
                 ),
                 'cfg'         => array(),
                 'ini'         => array('extension=memcached.so'),
@@ -49,8 +48,7 @@ class PhpExtensions
             'apc' => array(
                 'url'        => 'http://pecl.php.net/get/APC-3.1.14.tgz',
                 'php_version' => array(
-                    // apc 3.1.9 causes a segfault on PHP 5.4
-                    array('<', '5.4'),
+                    array('>=', '5.4'),
                 ),
                 'cfg'         => array(),
                 'ini'         => array(
