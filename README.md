@@ -26,6 +26,8 @@ It implements plugin architecture so it is easy to extend databroker with additi
 
 ##Run unit tests
 
+[![Build Status](https://secure.travis-ci.org/hergot/databroker.png)](http://travis-ci.org/hergot/databroker)
+
 `$ ./phpunit -c .`
 
 ###Run code coverage with unit tests
