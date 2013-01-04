@@ -28,7 +28,6 @@ class DataBroker {
      * Insert plugin
      * 
      * @param \hergot\databroker\Plugin\PluginInterface $plugin
-     * @codeCoverageIgnore
      */
     public function addPlugin(Plugin\PluginInterface $plugin) {
         $this->plugins[] = $plugin;
@@ -75,7 +74,8 @@ class DataBroker {
             }
         }
 
-        foreach ($this->plugins as $plugin) {
+        $reversePlugins = array_reverse($this->plugins);
+        foreach ($reversePlugins as $plugin) {
             $result = $plugin->runAfterExecute($dataAdapter, $parameters, $result, $exception);
         }
 

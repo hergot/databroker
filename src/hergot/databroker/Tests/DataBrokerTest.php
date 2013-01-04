@@ -5,6 +5,7 @@ namespace hergot\databroker\Tests;
 use hergot\databroker\DataBroker;
 
 class DataBrokerTest extends \PHPUnit_Framework_TestCase {
+    
     public function testExecute() {
         $adapterMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterInterface', array('getParameters', 'fetch'));
         $adapterMock->expects($this->once())
@@ -215,6 +216,59 @@ class DataBrokerTest extends \PHPUnit_Framework_TestCase {
         $databroker = new DataBroker($loaderMock);
         $databroker->addPlugin($pluginMock);
         $this->assertEquals('test2', $databroker->execute('testAdapter', array('parameter' => 'test')));        
+    }
+
+    public function testExecutePluginOrder() {
+        $adapterMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterInterface', array('fetch', 'getParameters'));
+        $adapterMock->expects($this->once())
+                ->method('getParameters')
+                ->will($this->returnValue(array()));
+        
+        $loaderMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterLoaderInterface', array('instantiate'));
+        $loaderMock->expects($this->once())
+                ->method('instantiate')
+                ->will($this->returnCallback(function($name) use ($adapterMock) {
+                    $this->assertEquals('testAdapter', $name);
+                    return $adapterMock;
+                }));
+                
+        $start1Before = null;
+        $start1After = null;
+        $start2Before = null;
+        $start2After = null;
+        $pluginMock = $this->getMock('\hergot\databroker\Plugin\PluginInterface');
+        $pluginMock->expects($this->once())
+                ->method('runBeforeExecute')
+                ->will($this->returnCallback(function(\hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter, array $parameters, $result) use ($adapterMock, &$start1Before) {
+                    $start1Before = microtime(true); 
+                    return 'test';
+                }));
+        $pluginMock->expects($this->once())
+                ->method('runAfterExecute')
+                ->will($this->returnCallback(function(\hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter, array $parameters, $result, \Exception $exception=null) use ($adapterMock, &$start1After) {
+                    $start1After = microtime(true); 
+                    return 'test2';
+                }));
+        $pluginMock2 = $this->getMock('\hergot\databroker\Plugin\PluginInterface');
+        $pluginMock2->expects($this->once())
+                ->method('runBeforeExecute')
+                ->will($this->returnCallback(function(\hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter, array $parameters, $result) use ($adapterMock, &$start2Before) {
+                    $start2Before = microtime(true); 
+                    return 'test';
+                }));
+        $pluginMock2->expects($this->once())
+                ->method('runAfterExecute')
+                ->will($this->returnCallback(function(\hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter, array $parameters, $result, \Exception $exception=null) use ($adapterMock, &$start2After) {
+                    $start2After = microtime(true); 
+                    return 'test2';
+                }));
+         
+        $databroker = new DataBroker($loaderMock);
+        $databroker->addPlugin($pluginMock);
+        $databroker->addPlugin($pluginMock2);
+        $this->assertEquals('test2', $databroker->execute('testAdapter', array('parameter' => 'test')));        
+        $this->assertTrue($start1Before < $start2Before);
+        $this->assertTrue($start1After > $start2After);
     }
     
     public function testExecuteFetchThrowsException() {
