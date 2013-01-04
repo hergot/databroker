@@ -42,4 +42,22 @@ You have to enable apc for cli - apc.enable_cli=1 in php.ini file or run phpunit
 
 `$ ./phpunit --exclude-group apc -c .`
 
+##Plugins
 
+###Cache plugin
+
+This plugin cache data fetch into cache backends (APC, file, ...). 
+This plugin have to be configured via setup method - this method expects name or mask of data fetch call.
+Mask can contain asterix * as wild character.
+
+####Configuration example
+
+`$cachePlugin->setup('*')
+    ->setCacheable(true)
+    ->setLifeTime(60)
+    ->setRefreshTime(10)
+    ->setBackend($cacheBackend);`
+
+This means to cache all (* - mask) data fetch for 60 seconds. 
+Every 10 seconds refresh content in cache backend. 
+Use $cacheBackend as cache backend.
