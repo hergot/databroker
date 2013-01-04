@@ -6,7 +6,7 @@ php:
 before_script:
     - composer install --dev
     - ln -nfs ./vendor/phpunit/phpunit/composer/bin/phpunit ./phpunit
-    - ldconfig -v
+    - sudo ldconfig -v
     - sudo apt-get remove --purge -y libmemcached-dev libmemcached
     - sudo apt-get install libcloog-ppl0
     - wget -c 'http://launchpad.net/libmemcached/1.0/1.0.14/+download/libmemcached-1.0.14.tar.gz'
