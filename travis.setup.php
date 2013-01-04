@@ -88,7 +88,7 @@ class PhpExtensions
             $folder = basename($file, ".tgz");
             $folder = basename($folder, ".tar.gz");
             $this->system(sprintf(
-                'sh -c "cd %s && phpize && ./configure %s && make && sudo make install" > /dev/null 2>&1',
+                'sh -c "cd %s && phpize && ./configure %s && make && sudo make install" 2>&1',
                 $folder,
                 implode(' ', $extension['cfg'])
             ));
