@@ -58,8 +58,8 @@ class APCCacheBackendTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue(apc_exists('test'));
         $this->assertEquals(1, apc_fetch('test'));
         $storedExpiry = $this->apc_expire('test');
-        $this->assertGreaterThan($expire - 2, $storedExpiry);
-        $this->assertLessThan($expire + 2, $storedExpiry);
+        $this->assertGreaterThanOrEqual($expire - 2, $storedExpiry);
+        $this->assertLessThanOrEqual($expire + 2, $storedExpiry);
     }
 
     /**
