@@ -7,9 +7,9 @@ interface DataAdapterInterface {
     /**
      * Retrieve list of parameters needed for fetch data
      * 
-     * @return array in form of array('parameterName', 'parameterName2' => array('required' => true), 'parameterName3' => array('default' => 'value'))
+     * @param ParameterCollection $parameters
      */
-    public function getParameters();
+    public function getParameters(ParameterCollection $parameters);
     
     /**
      * Fetch data from data source (e.g. filesystem, database, remote rest server, remote soap server, ...)

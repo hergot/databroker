@@ -7,8 +7,8 @@ class TestAdapter implements \hergot\databroker\DataAdapter\DataAdapterInterface
         return null;
     }
 
-    public function getParameters() {
-        return array();
+    public function getParameters(\hergot\databroker\DataAdapter\ParameterCollection $parameters) {
+        return;
     }
 }
 

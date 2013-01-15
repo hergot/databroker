@@ -4,7 +4,6 @@ namespace hergot\databroker;
 
 class DataBrokerException extends \RuntimeException {
     const MISSING_REQUIRED_PARAMETER = 1;
-    const MISMATCH_PARAMETER_TYPE = 2;
-    const MISMATCH_PARAMETER_INTERFACE = 3;
-    const CANNOT_INITIALIZE_DATA_ADAPTER = 4;
+    const INVALID_PARAMETER_VALUE = 2;
+    const CANNOT_INITIALIZE_DATA_ADAPTER = 3;
 }

@@ -96,45 +96,29 @@ class DataBroker {
      * @throws DataBrokerException
      */
     private function checkParameters(DataAdapter\DataAdapterInterface $dataAdapter, array $parameters) {
-        $adapterParameters = $dataAdapter->getParameters();
+        $adapterParameters = new DataAdapter\ParameterCollection();
+        $dataAdapter->getParameters($adapterParameters);
         $adapterName = get_class($dataAdapter);
-        foreach ($adapterParameters as $name => $specification) {
-            if (is_int($name)) { // parameter without any restriction or specification
-                if (!isset($parameters[$specification])) {
-                    $parameters[$specification] = null;
-                }
-            } else { // parameter with some restriction or specification
-                if (!is_array($specification)) {
-                    throw new \UnexpectedValueException('Parameter specification must be array. Get: '
-                            . gettype($specification));
-                }
+        foreach ($adapterParameters->getParameters() as $name => $parameter) {
+            /* @var $parameter \hergot\databroker\DataAdapter\Parameter */
+            try {
                 if (!isset($parameters[$name])) {
-                    if (isset($specification['required']) && $specification['required'] === true) {
+                    if ($parameter->isRequired() === true && $parameter->getDefaultValue() === null) {
                         throw new DataBrokerException('Missing required parameter "'
                                 . $name . '" for adapter "' . $adapterName . '"',
                                 DataBrokerException::MISSING_REQUIRED_PARAMETER);
-                    }
-                    if (isset($specification['default'])) {
-                        $parameters[$name] = $specification['default'];
-                    }
+                    }                
+                    $parameter->setValue($parameter->getDefaultValue());
+                } else {
+                    $parameter->setValue($parameters[$name]);
                 }
-                if (isset($specification['type']) && gettype($parameters[$name]) !== $specification['type']) {
-                    throw new DataBrokerException('Mismatched parameter type.' .
-                            ' Expected "' . $specification['type'] . '" get "' . gettype($parameters[$name])
-                            . '" for parameter "' . $name . '" in adapter "' . $adapterName . '"',
-                            DataBrokerException::MISMATCH_PARAMETER_TYPE);
-                }
-                if (isset($specification['interface']) && (gettype($parameters[$name]) !== 'object'
-                        || !($parameters[$name] instanceof $specification['interface']))) {
-                    throw new DataBrokerException('Mismatched parameter interface.' .
-                            ' Expected "' . $specification['interface'] . '" get "'
-                            . (gettype($parameters[$name]) !== 'object' ? gettype($parameters[$name]) : get_class($parameters[$name]))
-                            . '" for parameter "' . $name . '" in adapter "' . $adapterName . '"',
-                            DataBrokerException::MISMATCH_PARAMETER_INTERFACE);
-                }
+            } catch (\InvalidArgumentException $e) {
+                throw new DataBrokerException('Invalid parameter value for parameter "' 
+                        . $name . '" in data adapter "' . $adapterName . '"',
+                        DataBrokerException::INVALID_PARAMETER_VALUE);
             }
         }
-        return $parameters;
+        return $adapterParameters->toArray();
     }
 
 }

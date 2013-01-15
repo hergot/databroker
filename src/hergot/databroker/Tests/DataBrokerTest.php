@@ -3,6 +3,9 @@
 namespace hergot\databroker\Tests;
 
 use hergot\databroker\DataBroker;
+use hergot\databroker\DataAdapter\ParameterCollection;
+use hergot\databroker\DataAdapter\Parameter;
+use hergot\databroker\DataAdapter\DataAdapterInterface;
 
 class DataBrokerTest extends \PHPUnit_Framework_TestCase {
     
@@ -51,28 +54,11 @@ class DataBrokerTest extends \PHPUnit_Framework_TestCase {
         $adapterMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterInterface', array('getParameters', 'fetch'));
         $adapterMock->expects($this->once())
                 ->method('getParameters')
-                ->will($this->returnValue(array('parameter' => array('required' => true))));
-        
-        $loaderMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterLoaderInterface', array('instantiate'));
-        $loaderMock->expects($this->once())
-                ->method('instantiate')
-                ->will($this->returnCallback(function($name) use ($adapterMock) {
-                    $this->assertEquals('testAdapter', $name);
-                    
-                    return $adapterMock;
+                ->will($this->returnCallback(function(ParameterCollection $parameterCollection) {
+                    $parameter = new Parameter('test');
+                    $parameter->setRequired(true);
+                    $parameterCollection->addParameter($parameter); 
                 }));
-        $databroker = new DataBroker($loaderMock);
-        $databroker->execute('testAdapter', array());
-    }
-
-    /**
-     * @expectedException \UnexpectedValueException
-     */
-    public function testExecuteDataAdapterParameterNonArrayDefinition() {
-        $adapterMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterInterface', array('getParameters', 'fetch'));
-        $adapterMock->expects($this->once())
-                ->method('getParameters')
-                ->will($this->returnValue(array('parameter' => 1)));
         
         $loaderMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterLoaderInterface', array('instantiate'));
         $loaderMock->expects($this->once())
@@ -90,7 +76,12 @@ class DataBrokerTest extends \PHPUnit_Framework_TestCase {
         $adapterMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterInterface', array('getParameters', 'fetch'));
         $adapterMock->expects($this->once())
                 ->method('getParameters')
-                ->will($this->returnValue(array('parameter' => array('default' => 'test'))));
+                ->will($this->returnCallback(function(ParameterCollection $parameterCollection) {
+                    $parameter = new Parameter('parameter');
+                    $parameter->setRequired(true);
+                    $parameter->setDefaultValue('test');
+                    $parameterCollection->addParameter($parameter); 
+                }));
 
         $adapterMock->expects($this->once())
                 ->method('fetch')
@@ -111,62 +102,24 @@ class DataBrokerTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('test', $databroker->execute('testAdapter', array()));
     }
 
-    public function testExecuteDataAdapterParameterNoDefinition() {
-        $adapterMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterInterface', array('getParameters', 'fetch'));
-        $adapterMock->expects($this->once())
-                ->method('getParameters')
-                ->will($this->returnValue(array('parameter')));
-
-        $adapterMock->expects($this->once())
-                ->method('fetch')
-                ->will($this->returnCallback(function(array $parameters) {
-                    $this->assertEquals(array('parameter' => null), $parameters);
-                    return 'test';
-                }));
-        
-        $loaderMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterLoaderInterface', array('instantiate'));
-        $loaderMock->expects($this->once())
-                ->method('instantiate')
-                ->will($this->returnCallback(function($name) use ($adapterMock) {
-                    $this->assertEquals('testAdapter', $name);
-                    
-                    return $adapterMock;
-                }));
-        $databroker = new DataBroker($loaderMock);
-        $this->assertEquals('test', $databroker->execute('testAdapter', array()));
-    }
-
     /**
      * @expectedException \hergot\databroker\DataBrokerException
-     * @expectedExceptionCode \hergot\databroker\DataBrokerException::MISMATCH_PARAMETER_TYPE
+     * @expectedExceptionCode \hergot\databroker\DataBrokerException::INVALID_PARAMETER_VALUE
      */
-    public function testExecuteDataAdapterParameterTypeMismatch() {
+    public function testExecuteDataAdapterParameterValidator() {
         $adapterMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterInterface', array('getParameters', 'fetch'));
         $adapterMock->expects($this->once())
                 ->method('getParameters')
-                ->will($this->returnValue(array('parameter' => array('type' => 'integer'))));
-        
-        $loaderMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterLoaderInterface', array('instantiate'));
-        $loaderMock->expects($this->once())
-                ->method('instantiate')
-                ->will($this->returnCallback(function($name) use ($adapterMock) {
-                    $this->assertEquals('testAdapter', $name);
-                    
-                    return $adapterMock;
+                ->will($this->returnCallback(function(ParameterCollection $parameterCollection) {
+                    $validatorMock = $this->getMock('\hergot\databroker\DataAdapter\ValidatorInterface');
+                    $validatorMock->expects($this->once())->method('isValid')->will($this->returnValue(false));
+                    $parameter = new Parameter('parameter');
+                    $parameter->setValidator($validatorMock);
+                    $parameterCollection->addParameter($parameter); 
                 }));
-        $databroker = new DataBroker($loaderMock);
-        $databroker->execute('testAdapter', array('parameter' => 'test'));
-    }
 
-    /**
-     * @expectedException \hergot\databroker\DataBrokerException
-     * @expectedExceptionCode \hergot\databroker\DataBrokerException::MISMATCH_PARAMETER_INTERFACE
-     */
-    public function testExecuteDataAdapterParameterInterfaceMismatch() {
-        $adapterMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterInterface', array('getParameters', 'fetch'));
-        $adapterMock->expects($this->once())
-                ->method('getParameters')
-                ->will($this->returnValue(array('parameter' => array('interface' => '\stdClass'))));
+        $adapterMock->expects($this->never())
+                ->method('fetch');
         
         $loaderMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterLoaderInterface', array('instantiate'));
         $loaderMock->expects($this->once())
@@ -177,14 +130,18 @@ class DataBrokerTest extends \PHPUnit_Framework_TestCase {
                     return $adapterMock;
                 }));
         $databroker = new DataBroker($loaderMock);
-        $databroker->execute('testAdapter', array('parameter' => 'test'));
+        $databroker->execute('testAdapter', array());
     }
- 
+    
     public function testExecutePlugin() {
         $adapterMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterInterface', array('fetch', 'getParameters'));
         $adapterMock->expects($this->once())
                 ->method('getParameters')
-                ->will($this->returnValue(array()));
+                ->will($this->returnCallback(function(ParameterCollection $parameterCollection) {
+                    $parameter = new Parameter('parameter');
+                    $parameter->setDefaultValue('test');
+                    $parameterCollection->addParameter($parameter);
+                }));
         
         $loaderMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterLoaderInterface', array('instantiate'));
         $loaderMock->expects($this->once())
@@ -197,7 +154,7 @@ class DataBrokerTest extends \PHPUnit_Framework_TestCase {
         $pluginMock = $this->getMock('\hergot\databroker\Plugin\PluginInterface');
         $pluginMock->expects($this->once())
                 ->method('runBeforeExecute')
-                ->will($this->returnCallback(function(\hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter, array $parameters, $result) use ($adapterMock) {
+                ->will($this->returnCallback(function(DataAdapterInterface $dataAdapter, array $parameters, $result) use ($adapterMock) {
                     $this->assertEquals($adapterMock, $dataAdapter);
                     $this->assertEquals(array('parameter' => 'test'), $parameters);
                     $this->assertEquals(null, $result);
@@ -205,7 +162,7 @@ class DataBrokerTest extends \PHPUnit_Framework_TestCase {
                 }));
         $pluginMock->expects($this->once())
                 ->method('runAfterExecute')
-                ->will($this->returnCallback(function(\hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter, array $parameters, $result, \Exception $exception=null) use ($adapterMock) {
+                ->will($this->returnCallback(function(DataAdapterInterface $dataAdapter, array $parameters, $result, \Exception $exception=null) use ($adapterMock) {
                     $this->assertEquals($adapterMock, $dataAdapter);
                     $this->assertEquals(array('parameter' => 'test'), $parameters);
                     $this->assertEquals('test', $result);
@@ -239,26 +196,26 @@ class DataBrokerTest extends \PHPUnit_Framework_TestCase {
         $pluginMock = $this->getMock('\hergot\databroker\Plugin\PluginInterface');
         $pluginMock->expects($this->once())
                 ->method('runBeforeExecute')
-                ->will($this->returnCallback(function(\hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter, array $parameters, $result) use ($adapterMock, &$start1Before) {
+                ->will($this->returnCallback(function(DataAdapterInterface $dataAdapter, array $parameters, $result) use ($adapterMock, &$start1Before) {
                     $start1Before = microtime(true); 
                     return 'test';
                 }));
         $pluginMock->expects($this->once())
                 ->method('runAfterExecute')
-                ->will($this->returnCallback(function(\hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter, array $parameters, $result, \Exception $exception=null) use ($adapterMock, &$start1After) {
+                ->will($this->returnCallback(function(DataAdapterInterface $dataAdapter, array $parameters, $result, \Exception $exception=null) use ($adapterMock, &$start1After) {
                     $start1After = microtime(true); 
                     return 'test2';
                 }));
         $pluginMock2 = $this->getMock('\hergot\databroker\Plugin\PluginInterface');
         $pluginMock2->expects($this->once())
                 ->method('runBeforeExecute')
-                ->will($this->returnCallback(function(\hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter, array $parameters, $result) use ($adapterMock, &$start2Before) {
+                ->will($this->returnCallback(function(DataAdapterInterface $dataAdapter, array $parameters, $result) use ($adapterMock, &$start2Before) {
                     $start2Before = microtime(true); 
                     return 'test';
                 }));
         $pluginMock2->expects($this->once())
                 ->method('runAfterExecute')
-                ->will($this->returnCallback(function(\hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter, array $parameters, $result, \Exception $exception=null) use ($adapterMock, &$start2After) {
+                ->will($this->returnCallback(function(DataAdapterInterface $dataAdapter, array $parameters, $result, \Exception $exception=null) use ($adapterMock, &$start2After) {
                     $start2After = microtime(true); 
                     return 'test2';
                 }));
