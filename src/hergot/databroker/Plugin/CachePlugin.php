@@ -5,7 +5,7 @@ namespace hergot\databroker\Plugin;
 use hergot\databroker\DataAdapter\DataAdapterInterface;
 
 class CachePlugin implements PluginInterface {
-    
+
     /**
      * @var \hergot\databroker\Plugin\Cache\CacheSetting[]
      */
@@ -14,11 +14,11 @@ class CachePlugin implements PluginInterface {
     /**
      * @var array
      */
-    private $dataLoadedFromCache;
-    
+    private $areDataLoadedFromCache;
+
     public function __construct() {
         $this->adapterCacheSettings = array();
-        $this->dataLoadedFromCache = array();
+        $this->areDataLoadedFromCache = array();
     }
 
     /**
@@ -32,31 +32,46 @@ class CachePlugin implements PluginInterface {
         $this->adapterCacheSettings[$dataAdapterMask] = $cacheSetting;
         return $cacheSetting;
     }
-    
+
     /**
      * @param \hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter
      * @param array $parameters
      * @param mixed $result
      * @return mixed
      */
-    public function runAfterExecute(DataAdapterInterface $dataAdapter, array $parameters, $result, \Exception $exception=null) {
+    public function runAfterExecute(DataAdapterInterface $dataAdapter, array $parameters, 
+            $result, \Exception $exception = null) {
         if (!$this->isAdapterCacheable($dataAdapter)) {
             return $result;
         }
-        
-        if (isset($this->dataLoadedFromCache[md5(get_class($dataAdapter) . serialize($parameters))])
-            && $this->dataLoadedFromCache[md5(get_class($dataAdapter) . serialize($parameters))] === true) {
-            unset($this->dataLoadedFromCache[md5(get_class($dataAdapter) . serialize($parameters))]);
+
+        if (isset($this->areDataLoadedFromCache[md5(get_class($dataAdapter) . serialize($parameters))])
+                && $this->areDataLoadedFromCache[md5(get_class($dataAdapter) . serialize($parameters))] === true) {
+            unset($this->areDataLoadedFromCache[md5(get_class($dataAdapter) . serialize($parameters))]);
             return $result;
         }
 
         $settings = $this->getSettingsForAdapter($dataAdapter);
-        $refreshTime = $settings->getRefreshTime();
-        $lifeTime = $settings->getLifeTime();
-        $data = pack("N", $refreshTime === null 
-                ? $lifeTime + time() : $refreshTime + time()) . serialize($result);
-        $this->saveCacheData($dataAdapter, $parameters, $data);
-        return $result;
+        
+        if ($exception instanceof \Exception && $settings->getFailStrategy() instanceof Cache\FailStrategy) {
+            $failStrategy = $settings->getFailStrategy();
+            $refreshTime = $failStrategy->getRefreshTime();
+            if ($failStrategy->getReturnType() === Cache\FailStrategy::RETURN_TYPE_VALUE) {
+                $result = $failStrategy->getReturnValue();
+            } elseif ($failStrategy->getReturnType() === Cache\FailStrategy::RETURN_TYPE_CACHED_VALUE) {
+                $cachedData = $this->getCachedData($dataAdapter, $parameters);
+                $result = unserialize(substr($cachedData, 4));
+            }            
+            $data = pack("N", $refreshTime + time()) . serialize($result);
+            $this->saveCacheData($dataAdapter, $parameters, $data);
+            return $result;
+        } else {
+            $refreshTime = $settings->getRefreshTime();
+            $lifeTime = $settings->getLifeTime();
+            $data = pack("N", $refreshTime === null ? $lifeTime + time() : $refreshTime + time()) . serialize($result);
+            $this->saveCacheData($dataAdapter, $parameters, $data);
+            return $result;
+        }
     }
 
     /**
@@ -69,18 +84,19 @@ class CachePlugin implements PluginInterface {
         if (!$this->isAdapterCacheable($dataAdapter)) {
             return $result;
         }
-        
+
         $cachedData = $this->getCachedData($dataAdapter, $parameters);
         if ($cachedData === null) {
             return $result;
         }
-        
+
         $refreshTime = unpack("N", substr($cachedData, 0, 4))[1];
         if ($refreshTime < time()) {
             return $result;
         }
+        
         $data = unserialize(substr($cachedData, 4));
-        $this->dataLoadedFromCache[md5(get_class($dataAdapter) . serialize($parameters))] = true;
+        $this->areDataLoadedFromCache[md5(get_class($dataAdapter) . serialize($parameters))] = true;
         return $data;
     }
 
@@ -90,10 +106,11 @@ class CachePlugin implements PluginInterface {
      * @return string
      */
     private function getCachedData(DataAdapterInterface $dataAdapter, array $parameters) {
-        $settings = $this->getSettingsForAdapter($dataAdapter);        
+        $settings = $this->getSettingsForAdapter($dataAdapter);
         $cacheKey = $this->getCacheKeyForAdapter($dataAdapter, $parameters);
         if (!$settings->getBackend() instanceof Cache\CacheBackendInterface) {
-            throw new Cache\CachePluginException('Missing cache backend for data adapter "' . get_class($dataAdapter) . '"', Cache\CachePluginException::MISSING_BACKEND);
+            throw new Cache\CachePluginException('Missing cache backend for data adapter "'
+                    . get_class($dataAdapter) . '"', Cache\CachePluginException::MISSING_BACKEND);
         }
         return $settings->getBackend()->read($cacheKey, null);
     }
@@ -105,17 +122,19 @@ class CachePlugin implements PluginInterface {
      * @throws Cache\CachePluginException
      */
     private function saveCacheData(DataAdapterInterface $dataAdapter, array $parameters, $value) {
-        $settings = $this->getSettingsForAdapter($dataAdapter);        
+        $settings = $this->getSettingsForAdapter($dataAdapter);
         $cacheKey = $this->getCacheKeyForAdapter($dataAdapter, $parameters);
         if (!$settings->getBackend() instanceof Cache\CacheBackendInterface) {
-            throw new Cache\CachePluginException('Missing cache backend for data adapter "' . get_class($dataAdapter) . '"', Cache\CachePluginException::MISSING_BACKEND);
+            throw new Cache\CachePluginException('Missing cache backend for data adapter "'
+                    . get_class($dataAdapter) . '"', Cache\CachePluginException::MISSING_BACKEND);
         }
         if (!is_int($settings->getLifeTime())) {
-            throw new Cache\CachePluginException('Missing cache lifetime for data adapter "' . get_class($dataAdapter) . '"', Cache\CachePluginException::MISSING_LIFETIME);
+            throw new Cache\CachePluginException('Missing cache lifetime for data adapter "'
+                    . get_class($dataAdapter) . '"', Cache\CachePluginException::MISSING_LIFETIME);
         }
-        $settings->getBackend()->write($cacheKey, $value, $settings->getLifeTime());        
+        $settings->getBackend()->write($cacheKey, $value, $settings->getLifeTime());
     }
-    
+
     /**
      * @param \hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter
      * @return bool
@@ -132,7 +151,7 @@ class CachePlugin implements PluginInterface {
     private function getCacheKeyForAdapter(DataAdapterInterface $dataAdapter, array $parameters) {
         return str_replace('\\', ':', get_class($dataAdapter)) . ':' . md5(serialize($parameters));
     }
-    
+
     /**
      * @param \hergot\databroker\DataAdapter\DataAdapterInterface $dataAdapter
      * @return \hergot\databroker\Plugin\Cache\CacheSetting
@@ -146,7 +165,7 @@ class CachePlugin implements PluginInterface {
                 $result->merge($cacheSetting);
             }
         }
-        return $result;        
+        return $result;
     }
-    
+
 }

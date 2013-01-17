@@ -21,11 +21,17 @@ class CacheSetting {
      */
     private $refreshTime;
     
+    /**
+     * @var FailStrategy
+     */
+    private $failStrategy;
+    
     public function __construct() {
         $this->isCacheable = null;
         $this->backend = null;
         $this->lifeTime = null;
         $this->refreshTime = null;
+        $this->failStrategy = null;
     }
 
     /**
@@ -36,11 +42,27 @@ class CacheSetting {
         $this->backend = $cacheSetting->getBackend() !== null ? $cacheSetting->getBackend() : $this->backend;
         $this->lifeTime = $cacheSetting->getLifeTime() !== null ? $cacheSetting->getLifeTime() : $this->lifeTime;
         $this->refreshTime = $cacheSetting->getRefreshTime() !== null ? $cacheSetting->getRefreshTime() : $this->refreshTime;
+        $this->failStrategy = $cacheSetting->getFailStrategy() !== null ? $cacheSetting->getFailStrategy() : $this->failStrategy;
+    }
+
+    /**
+     * @return FailStrategy
+     */
+    public function getFailStrategy() {
+        return $this->failStrategy;
+    }
+
+    /**
+     * @param \hergot\databroker\Plugin\Cache\FailStrategy $failStrategy
+     * @return \hergot\databroker\Plugin\Cache\CacheSetting
+     */
+    public function setFailStrategy(FailStrategy $failStrategy) {
+        $this->failStrategy = $failStrategy;
+        return $this;
     }
     
     /**
      * @return bool|null
-     * @codeCoverageIgnore
      */
     public function isCacheable() {
         return $this->isCacheable;
@@ -49,7 +71,6 @@ class CacheSetting {
     /**
      * @param bool $isCacheable
      * @return \hergot\databroker\Plugin\Cache\CacheSetting
-     * @codeCoverageIgnore
      */
     public function setCacheable($isCacheable) {
         $this->isCacheable = (bool)$isCacheable;
@@ -58,7 +79,6 @@ class CacheSetting {
 
     /**
      * @return \hergot\databroker\Plugin\Cache\CacheBackendInterface|null
-     * @codeCoverageIgnore
      */
     public function getBackend() {
         return $this->backend;
@@ -67,7 +87,6 @@ class CacheSetting {
     /**
      * @param \hergot\databroker\Plugin\Cache\CacheBackendInterface $backend
      * @return \hergot\databroker\Plugin\Cache\CacheSetting
-     * @codeCoverageIgnore
      */
     public function setBackend(CacheBackendInterface $backend) {
         $this->backend = $backend;
@@ -76,7 +95,6 @@ class CacheSetting {
 
     /**
      * @return integer|null
-     * @codeCoverageIgnore
      */
     public function getLifeTime() {
         return $this->lifeTime;
@@ -85,7 +103,6 @@ class CacheSetting {
     /**
      * @param integer $lifeTime
      * @return \hergot\databroker\Plugin\Cache\CacheSetting
-     * @codeCoverageIgnore
      */
     public function setLifeTime($lifeTime) {
         $this->lifeTime = $lifeTime;
@@ -94,7 +111,6 @@ class CacheSetting {
 
     /**
      * @return integer|null
-     * @codeCoverageIgnore
      */
     public function getRefreshTime() {
         return $this->refreshTime;
