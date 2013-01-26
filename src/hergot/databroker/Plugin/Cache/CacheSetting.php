@@ -22,7 +22,7 @@ class CacheSetting {
     private $refreshTime;
     
     /**
-     * @var FailStrategy
+     * @var FailStrategyInterface
      */
     private $failStrategy;
     
@@ -46,17 +46,17 @@ class CacheSetting {
     }
 
     /**
-     * @return FailStrategy
+     * @return FailStrategyInterface
      */
     public function getFailStrategy() {
         return $this->failStrategy;
     }
 
     /**
-     * @param \hergot\databroker\Plugin\Cache\FailStrategy $failStrategy
+     * @param \hergot\databroker\Plugin\Cache\FailStrategyInterface $failStrategy
      * @return \hergot\databroker\Plugin\Cache\CacheSetting
      */
-    public function setFailStrategy(FailStrategy $failStrategy) {
+    public function setFailStrategy(FailStrategyInterface $failStrategy) {
         $this->failStrategy = $failStrategy;
         return $this;
     }

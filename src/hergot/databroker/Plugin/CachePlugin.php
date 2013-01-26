@@ -53,15 +53,18 @@ class CachePlugin implements PluginInterface {
 
         $settings = $this->getSettingsForAdapter($dataAdapter);
         
-        if ($exception instanceof \Exception && $settings->getFailStrategy() instanceof Cache\FailStrategy) {
+        if ($exception instanceof \Exception && $settings->getFailStrategy() instanceof Cache\FailStrategyInterface) {            
             $failStrategy = $settings->getFailStrategy();
-            $refreshTime = $failStrategy->getRefreshTime();
-            if ($failStrategy->getReturnType() === Cache\FailStrategy::RETURN_TYPE_VALUE) {
-                $result = $failStrategy->getReturnValue();
-            } elseif ($failStrategy->getReturnType() === Cache\FailStrategy::RETURN_TYPE_CACHED_VALUE) {
-                $cachedData = $this->getCachedData($dataAdapter, $parameters);
-                $result = unserialize(substr($cachedData, 4));
-            }            
+            $failStrategyResult = $failStrategy->getFailStrategyResult($dataAdapter, $parameters, 
+                    $result, function() use ($dataAdapter, $parameters) {
+                        return $this->getCachedData($dataAdapter, $parameters);
+                    }, $exception);
+            if (!$failStrategyResult instanceof Cache\FailStrategyResult) {
+                throw new \RuntimeException('Fail strategy "' . get_class($failStrategy) 
+                        . '" call getFailStrategyResult must return instance of Cache\\FailStrategyResult');
+            }
+            $refreshTime = $failStrategyResult->getRefreshTime();
+            $result = $failStrategyResult->getValue();
             $data = pack("N", $refreshTime + time()) . serialize($result);
             $this->saveCacheData($dataAdapter, $parameters, $data);
             return $result;

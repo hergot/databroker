@@ -40,4 +40,11 @@ class CacheSettingsTest extends \PHPUnit_Framework_TestCase {
         $cs->merge($cs2);
         $this->assertEquals(1, $cs->getLifeTime());        
     }
+    
+    public function testSetFailStrategy() {
+        $cs = new CacheSetting;
+        $failStrategyMock = $this->getMock('\hergot\databroker\Plugin\Cache\FailStrategyInterface');
+        $cs->setFailStrategy($failStrategyMock);
+        $this->assertEquals($failStrategyMock, $cs->getFailStrategy());
+    }
 }

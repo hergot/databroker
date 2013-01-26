@@ -3,7 +3,7 @@
 namespace hergot\databroker\Tests\Plugin;
 
 use hergot\databroker\Plugin\CachePlugin;
-use hergot\databroker\Plugin\Cache\FailStrategy;
+use hergot\databroker\Plugin\Cache\FailStrategyResult;
 
 class CachePluginTest extends \PHPUnit_Framework_TestCase {
     public function testRunBeforeExecuteNotCacheable() {
@@ -104,53 +104,87 @@ class CachePluginTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals('test', $cachePlugin->runAfterExecute($dataAdapterMock, array(), $result));        
     }
 
-    public function testRunAfterExecuteSaveToCacheFailStrategyReturnCachedValue() {
+    public function testRunAfterExecuteFailStrategy() {
         $backend = $this->getMock('\hergot\databroker\Plugin\Cache\CacheBackendInterface');
         $backend->expects($this->once())
                 ->method('write')
                 ->will($this->returnCallback(function ($name, $value, $lifeTime) {
                     $this->assertEquals(10, $lifeTime);
                     $this->assertContains('Mock_DataAdapterInterface', $name);
-                    $this->assertEquals(pack("N", time() + 5) . serialize('test'), $value);
+                    $this->assertEquals(pack("N", time() + 20) . serialize('cachedTest'), $value);
+                }));
+
+        $failStrategyMock = $this->getMock('\hergot\databroker\Plugin\Cache\FailStrategyInterface');
+        $failStrategyMock->expects($this->once())
+                ->method('getFailStrategyResult')
+                ->will($this->returnCallback(function($dataAdapter, $parameters, $result, $cacheDataCallback, $exception) {
+                    return new FailStrategyResult(20, 'cachedTest');
+                }));
+        $cachePlugin = new CachePlugin();
+        $cachePlugin->setup('*')
+                ->setLifeTime(10)
+                ->setBackend($backend)
+                ->setFailStrategy($failStrategyMock)
+                ->setCacheable(true);
+        $dataAdapterMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterInterface');
+        $result = 'test';
+        $this->assertEquals('cachedTest', $cachePlugin->runAfterExecute($dataAdapterMock, array(), $result, new \Exception('test')));        
+    }
+
+    public function testRunAfterExecuteFailStrategyCachedData() {
+        $backend = $this->getMock('\hergot\databroker\Plugin\Cache\CacheBackendInterface');
+        $backend->expects($this->once())
+                ->method('write')
+                ->will($this->returnCallback(function ($name, $value, $lifeTime) {
+                    $this->assertEquals(10, $lifeTime);
+                    $this->assertContains('Mock_DataAdapterInterface', $name);
+                    $this->assertEquals(pack("N", time() + 20) . serialize('originalCachedData'), $value);
                 }));
         $backend->expects($this->once())
                 ->method('read')
-                ->will($this->returnCallback(function ($name, $defaultValue) {
-                    $this->assertContains('Mock_DataAdapterInterface', $name);
-                    return 'XXXX' . serialize('test');
+                ->will($this->returnCallback(function ($key, $defaultValue) {
+                    $this->assertContains('Mock_DataAdapterInterface', $key);
+                    return 'originalCachedData';
                 }));
-                
+
+        $failStrategyMock = $this->getMock('\hergot\databroker\Plugin\Cache\FailStrategyInterface');
+        $failStrategyMock->expects($this->once())
+                ->method('getFailStrategyResult')
+                ->will($this->returnCallback(function($dataAdapter, $parameters, $result, $cacheDataCallback, $exception) {
+                    return new FailStrategyResult(20, call_user_func($cacheDataCallback));
+                }));
         $cachePlugin = new CachePlugin();
         $cachePlugin->setup('*')
                 ->setLifeTime(10)
                 ->setBackend($backend)
-                ->setCacheable(true)
-                ->setFailStrategy(new FailStrategy(FailStrategy::RETURN_TYPE_CACHED_VALUE, 5));
+                ->setFailStrategy($failStrategyMock)
+                ->setCacheable(true);
         $dataAdapterMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterInterface');
-
         $result = 'test';
-        $this->assertEquals('test', $cachePlugin->runAfterExecute($dataAdapterMock, array(), $result, new \Exception('test')));        
+        $this->assertEquals('originalCachedData', $cachePlugin->runAfterExecute($dataAdapterMock, array(), $result, new \Exception('test')));        
     }
 
-    public function testRunAfterExecuteSaveToCacheFailStrategyReturnValue() {
+    /**
+     * @expectedException \RuntimeException
+     */
+    public function testRunAfterExecuteFailStrategyBadResult() {
         $backend = $this->getMock('\hergot\databroker\Plugin\Cache\CacheBackendInterface');
-        $backend->expects($this->once())
-                ->method('write')
-                ->will($this->returnCallback(function ($name, $value, $lifeTime) {
-                    $this->assertEquals(10, $lifeTime);
-                    $this->assertContains('Mock_DataAdapterInterface', $name);
-                    $this->assertEquals(pack("N", time() + 5) . serialize('test'), $value);
-                }));                
+
+        $failStrategyMock = $this->getMock('\hergot\databroker\Plugin\Cache\FailStrategyInterface');
+        $failStrategyMock->expects($this->once())
+                ->method('getFailStrategyResult')
+                ->will($this->returnCallback(function($dataAdapter, $parameters, $result, $cacheDataCallback, $exception) {
+                    return null;
+                }));
         $cachePlugin = new CachePlugin();
         $cachePlugin->setup('*')
                 ->setLifeTime(10)
                 ->setBackend($backend)
-                ->setCacheable(true)
-                ->setFailStrategy(new FailStrategy(FailStrategy::RETURN_TYPE_VALUE, 5, 'test'));
+                ->setFailStrategy($failStrategyMock)
+                ->setCacheable(true);
         $dataAdapterMock = $this->getMock('\hergot\databroker\DataAdapter\DataAdapterInterface');
-
         $result = 'test';
-        $this->assertEquals('test', $cachePlugin->runAfterExecute($dataAdapterMock, array(), $result, new \Exception('test')));        
+        $cachePlugin->runAfterExecute($dataAdapterMock, array(), $result, new \Exception('test'));
     }
     
     public function testRunAfterExecuteAlreadyLoadedFromCache() {
