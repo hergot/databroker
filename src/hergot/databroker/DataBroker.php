@@ -101,6 +101,7 @@ class DataBroker {
         $adapterName = get_class($dataAdapter);
         foreach ($adapterParameters->getParameters() as $name => $parameter) {
             /* @var $parameter \hergot\databroker\DataAdapter\Parameter */
+            $value = null;
             try {
                 if (!isset($parameters[$name])) {
                     if ($parameter->isRequired() === true && $parameter->getDefaultValue() === null) {
@@ -108,12 +109,15 @@ class DataBroker {
                                 . $name . '" for adapter "' . $adapterName . '"',
                                 DataBrokerException::MISSING_REQUIRED_PARAMETER);
                     }                
-                    $parameter->setValue($parameter->getDefaultValue());
+                    $value = $parameter->getDefaultValue();
                 } else {
-                    $parameter->setValue($parameters[$name]);
+                    $value = $parameters[$name];
                 }
+                $parameter->setValue($value);
             } catch (\InvalidArgumentException $e) {
-                throw new DataBrokerException('Invalid parameter value for parameter "' 
+                throw new DataBrokerException('Invalid parameter value ' 
+                        . '"' . $value . '"' 
+                        . ' for parameter "' 
                         . $name . '" in data adapter "' . $adapterName . '"',
                         DataBrokerException::INVALID_PARAMETER_VALUE);
             }
