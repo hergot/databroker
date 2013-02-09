@@ -108,7 +108,7 @@ class DataBroker {
                         throw new DataBrokerException('Missing required parameter "'
                                 . $name . '" for adapter "' . $adapterName . '"',
                                 DataBrokerException::MISSING_REQUIRED_PARAMETER);
-                    }                
+                    }
                     $value = $parameter->getDefaultValue();
                 } else {
                     $value = $parameters[$name];
@@ -119,7 +119,7 @@ class DataBroker {
                         . '"' . $value . '"' 
                         . ' for parameter "' 
                         . $name . '" in data adapter "' . $adapterName . '"',
-                        DataBrokerException::INVALID_PARAMETER_VALUE);
+                        DataBrokerException::INVALID_PARAMETER_VALUE, $e);
             }
         }
         return $adapterParameters->toArray();
