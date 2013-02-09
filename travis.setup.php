@@ -3,7 +3,6 @@
 $installer = new PhpExtensions();
 
 $installer->install('apc');
-$installer->install('memcache');
 $installer->install('memcached');
 
 class PhpExtensions {
@@ -27,12 +26,6 @@ class PhpExtensions {
         $this->phpVersion = phpversion();
         $this->iniPath = php_ini_loaded_file();
         $this->extensions = array(
-            'memcache' => array(
-                'url' => 'http://pecl.php.net/get/memcache-2.2.7.tgz',
-                'php_version' => array(),
-                'cfg' => array('--enable-memcache'),
-                'ini' => array('extension=memcache.so'),
-            ),
             'memcached' => array(
                 'url' => 'http://pecl.php.net/get/memcached-2.1.0.tgz',
                 'php_version' => array(
@@ -42,7 +35,7 @@ class PhpExtensions {
                 'ini' => array('extension=memcached.so'),
             ),
             'apc' => array(
-                'url' => 'http://pecl.php.net/get/APC-3.1.14.tgz',
+                'url' => 'http://pecl.php.net/get/APC-3.1.13.tgz',
                 'php_version' => array(
                     array('>=', '5.4'),
                 ),
