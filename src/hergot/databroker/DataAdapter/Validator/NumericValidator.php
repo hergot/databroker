@@ -32,9 +32,7 @@ class NumericValidator implements ValidatorInterface {
      * @throws \InvalidArgumentException
      */
     public function setMin($min) {
-        if (!is_numeric($min)) {
-            throw new \InvalidArgumentException('Minimal value must be numeric. Get: "' . $min . '"');
-        }
+        $this->checkType($min);
         $this->min = $min;
         return $this;
     }
@@ -47,9 +45,7 @@ class NumericValidator implements ValidatorInterface {
      * @throws \InvalidArgumentException
      */
     public function setMax($max) {
-        if (!is_numeric($max)) {
-            throw new \InvalidArgumentException('Maximal value must be numeric. Get: "' . $max . '"');
-        }
+        $this->checkType($max);
         $this->max = $max;
         return $this;
     }
@@ -71,6 +67,18 @@ class NumericValidator implements ValidatorInterface {
         }
 
         return true;
+    }
+    
+    /**
+     * Check value type
+     * 
+     * @param mixed $value
+     * @throws \InvalidArgumentException
+     */
+    protected function checkType($value) {
+        if (!is_numeric($value)) {
+            throw new \InvalidArgumentException('Value must be numeric. Get: "' . $value . '"');
+        }
     }
 
 }
