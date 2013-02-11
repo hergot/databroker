@@ -2,12 +2,12 @@
 
 namespace hergot\databroker\Tests\DataAdapter\Validator;
 
-use hergot\databroker\DataAdapter\Validator\NumericValidator;
+use hergot\databroker\DataAdapter\Validator\IntegerValidator;
 
-class NumericValidatorTest extends \PHPUnit_Framework_TestCase {
+class IntegerValidatorTest extends \PHPUnit_Framework_TestCase {
     
     public function testMin() {
-        $sv = new NumericValidator();
+        $sv = new IntegerValidator();
         $sv->setMin(1);
         $this->assertFalse($sv->isValid(0));
         $this->assertTrue($sv->isValid(10));
@@ -16,13 +16,13 @@ class NumericValidatorTest extends \PHPUnit_Framework_TestCase {
     /**
      * @expectedException \InvalidArgumentException
      */
-    public function testMinNonNumeric() {
-        $sv = new NumericValidator();
+    public function testMinNonInteger() {
+        $sv = new IntegerValidator();
         $sv->setMin('test');
     }
     
     public function testMax() {
-        $sv = new NumericValidator();
+        $sv = new IntegerValidator();
         $sv->setMax(1);
         $this->assertFalse($sv->isValid(10));
         $this->assertTrue($sv->isValid(0));
@@ -31,13 +31,13 @@ class NumericValidatorTest extends \PHPUnit_Framework_TestCase {
     /**
      * @expectedException \InvalidArgumentException
      */
-    public function testMaxNonNumeric() {
-        $sv = new NumericValidator();
+    public function testMaxNonInteger() {
+        $sv = new IntegerValidator();
         $sv->setMax('test');
     }
     
     public function testIsValid() {
-        $sv = new NumericValidator();
+        $sv = new IntegerValidator();
         $this->assertTrue($sv->isValid(12));
         $this->assertFalse($sv->isValid('test'));
     }
