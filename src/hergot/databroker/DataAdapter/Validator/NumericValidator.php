@@ -54,10 +54,12 @@ class NumericValidator implements ValidatorInterface {
      * {@inheritdoc}
      */
     public function isValid($value) {
-        if (!is_numeric($value)) {
+        try {
+            $this->checkType($value);
+        } catch (\InvalidArgumentException $e) {
             return false;
         }
-
+        
         if ($this->min !== null && $value < $this->min) {
             return false;
         }
