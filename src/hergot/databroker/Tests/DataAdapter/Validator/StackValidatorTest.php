@@ -2,40 +2,39 @@
 
 namespace hergot\databroker\Tests\DataAdapter\Validator;
 
-use hergot\databroker\DataAdapter\Validator\EnumValidator;
+use hergot\databroker\DataAdapter\Validator\StackValidator;
 
-class EnumValidatorTest extends \PHPUnit_Framework_TestCase {
+class StackValidatorTest extends \PHPUnit_Framework_TestCase {
     
-    public function testSetAllowedValues() {
-        $ev = new EnumValidator();
-        $ev->setAllowedValues(array(1,2,3));
-        $this->assertTrue($ev->isValid(1));
-        $this->assertTrue($ev->isValid(2));
-        $this->assertTrue($ev->isValid(3));
-        $this->assertFalse($ev->isValid(4));
-        $ev->setAllowedValues(new \ArrayObject(array(1,2,3)));
-        $this->assertTrue($ev->isValid(1));
-        $this->assertTrue($ev->isValid(2));
-        $this->assertTrue($ev->isValid(3));
-        $this->assertFalse($ev->isValid(4));
+    public function testAddValidator() {
+        $sv = new StackValidator();
+        $vm = $this->getMock('\hergot\databroker\DataAdapter\ValidatorInterface');
+        $this->assertTrue($sv === $sv->addValidator($vm));
+        $vm->expects($this->once())->method('isValid')->will($this->returnCallback(function($value) {
+            $this->assertTrue($value === 1);
+            return true;
+        }));
+        $sv->isValid(1);
     }
-
+    
     /**
      * @expectedException \InvalidArgumentException
      */
-    public function testSetAllowedValuesBadOptions() {
-        $ev = new EnumValidator();
-        $ev->setAllowedValues(false);
+    public function testSetValidatorsBadValidators() {
+        $sv = new StackValidator();
+        $sv->setValidators(1);
     }
 
-    public function testAddAllowedValue() {
-        $ev = new EnumValidator();
-        $ev->addAllowedValue(1);
-        $this->assertTrue($ev->isValid(1));
-        $this->assertFalse($ev->isValid(2));
-        $ev->addAllowedValue(2);
-        $this->assertTrue($ev->isValid(2));
-        $this->assertFalse($ev->isValid(3));
+    public function testSetValidators() {
+        $sv = new StackValidator();
+        $vm = $this->getMock('\hergot\databroker\DataAdapter\ValidatorInterface');
+        $this->assertTrue($sv === $sv->setValidators(array($vm)));
+        $vm->expects($this->once())->method('isValid')->will($this->returnCallback(function($value) {
+            $this->assertTrue($value === 1);
+            return false;
+        }));
+        $this->assertFalse($sv->isValid(1));
+        $this->assertTrue($sv === $sv->setValidators(new \ArrayObject(array($vm))));
     }
     
 }
