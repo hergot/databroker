@@ -8,12 +8,12 @@ class EnumValidatorTest extends \PHPUnit_Framework_TestCase {
     
     public function testSetAllowedValues() {
         $ev = new EnumValidator();
-        $this->assertTrue($ev === $ev->setAllowedValues(array(1,2,3)));
+        $ev->setAllowedValues(array(1,2,3));
         $this->assertTrue($ev->isValid(1));
         $this->assertTrue($ev->isValid(2));
         $this->assertTrue($ev->isValid(3));
         $this->assertFalse($ev->isValid(4));
-        $this->assertTrue($ev === $ev->setAllowedValues(new \ArrayObject(array(1,2,3))));
+        $ev->setAllowedValues(new \ArrayObject(array(1,2,3)));
         $this->assertTrue($ev->isValid(1));
         $this->assertTrue($ev->isValid(2));
         $this->assertTrue($ev->isValid(3));
@@ -30,10 +30,10 @@ class EnumValidatorTest extends \PHPUnit_Framework_TestCase {
 
     public function testAddAllowedValue() {
         $ev = new EnumValidator();
-        $this->assertTrue($ev === $ev->addAllowedValue(1));
+        $ev->addAllowedValue(1);
         $this->assertTrue($ev->isValid(1));
         $this->assertFalse($ev->isValid(2));
-        $this->assertTrue($ev === $ev->addAllowedValue(2));
+        $ev->addAllowedValue(2);
         $this->assertTrue($ev->isValid(2));
         $this->assertFalse($ev->isValid(3));
     }
